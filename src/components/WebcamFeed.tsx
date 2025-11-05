@@ -13,11 +13,12 @@ interface EmotionData {
 interface WebcamFeedProps {
   onEmotionDetected: (data: EmotionData) => void;
   onFearDetected: (confidence: number) => void;
+  onManualSOSEnabled: (enabled: boolean) => void;
 }
 
 const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model";
 
-export const WebcamFeed = ({ onEmotionDetected, onFearDetected }: WebcamFeedProps) => {
+export const WebcamFeed = ({ onEmotionDetected, onFearDetected, onManualSOSEnabled }: WebcamFeedProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -131,6 +132,12 @@ export const WebcamFeed = ({ onEmotionDetected, onFearDetected }: WebcamFeedProp
           } else {
             onFearDetected(0); // Reset fear tracking
           }
+
+          // Check for manual SOS eligibility (sad, fearful, or surprised with >= 50% confidence)
+          const shouldEnableManualSOS = 
+            (dominantEmotion === "sad" || dominantEmotion === "fearful" || dominantEmotion === "surprised") 
+            && confidence >= 0.5;
+          onManualSOSEnabled(shouldEnableManualSOS);
         }
       }
     }, 500);

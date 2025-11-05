@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { WebcamFeed } from "@/components/WebcamFeed";
 import { EmotionDisplay } from "@/components/EmotionDisplay";
 import { EmpathicSuggestions } from "@/components/EmpathicSuggestions";
@@ -11,6 +12,7 @@ const Index = () => {
   const [currentEmotion, setCurrentEmotion] = useState({ emotion: "neutral", confidence: 0 });
   const [showSOSAlert, setShowSOSAlert] = useState(false);
   const [eventLog, setEventLog] = useState<LogEntry[]>([]);
+  const [manualSOSEnabled, setManualSOSEnabled] = useState(false);
   
   const fearStartTime = useRef<number | null>(null);
   const lastLoggedEmotion = useRef<string>("");
@@ -75,6 +77,15 @@ const Index = () => {
     fearStartTime.current = null;
   };
 
+  const handleManualSOS = () => {
+    setShowSOSAlert(true);
+    addLogEntry({
+      type: "alert",
+      timestamp: new Date(),
+      message: "🚨 Manual SOS triggered by user",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-background">
       {/* Header */}
@@ -102,7 +113,22 @@ const Index = () => {
           <WebcamFeed
             onEmotionDetected={handleEmotionDetected}
             onFearDetected={handleFearDetected}
+            onManualSOSEnabled={setManualSOSEnabled}
           />
+
+          {/* Manual SOS Button */}
+          <Button
+            onClick={handleManualSOS}
+            disabled={!manualSOSEnabled}
+            size="lg"
+            className={`gap-2 transition-all duration-300 ${
+              manualSOSEnabled 
+                ? 'bg-destructive hover:bg-destructive/90 animate-pulse' 
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
+            }`}
+          >
+            🚨 Trigger SOS
+          </Button>
 
           {/* Emotion Display */}
           {currentEmotion.confidence > 0 && (

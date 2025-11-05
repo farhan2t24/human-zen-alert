@@ -42,35 +42,51 @@ export const SOSAlert = ({ isOpen, onClose, onSend }: SOSAlertProps) => {
   const handleSend = async () => {
     try {
       // Get location if available
-      let location = null;
+      let locationText = "Location unavailable";
+      let locationLink = "";
+
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            location = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            };
-          },
-          (error) => {
-            console.error("Location error:", error);
-          }
-        );
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 5000,
+              enableHighAccuracy: true
+            });
+          });
+          
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          locationLink = `https://maps.google.com/?q=${lat},${lng}`;
+          locationText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        } catch (error) {
+          console.error("Location error:", error);
+          locationText = "Location access denied";
+        }
       }
 
       // Get contacts from localStorage
       const contacts = JSON.parse(localStorage.getItem("humanizedVision.contacts") || "[]");
 
-      // Mock email sending
-      const alertData = {
+      // Create alert message
+      const alertMessage = `
+🚨 SOS ALERT 🚨
+Detected emotion: FEARFUL
+Time: ${new Date().toISOString()}
+Location: ${locationText}
+${locationLink ? `Map: ${locationLink}` : ''}
+Emergency contacts: ${contacts.join(', ') || 'None saved'}
+      `.trim();
+
+      // Log alert data
+      console.log("📧 SOS Alert Details:", {
         emotion: "fear",
         timestamp: new Date().toISOString(),
-        location,
+        location: locationLink || locationText,
         contacts,
-      };
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("SOS Alert sent:", alertData);
+      // Show alert message
+      alert(alertMessage);
 
       toast.success("🚨 SOS Alert Sent!", {
         description: "Emergency contacts have been notified.",
