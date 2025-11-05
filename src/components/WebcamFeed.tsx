@@ -128,7 +128,7 @@ export const WebcamFeed = ({ onEmotionDetected, onFearDetected }: WebcamFeedProp
           // Check for fear
           if (dominantEmotion === "fearful" && confidence >= 0.6) {
             onFearDetected(confidence);
-          } else if (dominantEmotion !== "fearful") {
+          } else {
             onFearDetected(0); // Reset fear tracking
           }
         }
